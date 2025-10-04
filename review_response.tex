@@ -8,7 +8,7 @@
 %% Fonts
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-%\usepackage{newcent} % different font
+% \usepackage{newcent} % different font
 %\usepackage[scaled]{beramono} % different monospace font
 
 
@@ -19,11 +19,11 @@
 \usepackage{hyperref}
 
 
-\title{My Awesome Paper Title}
-\author{Donald Duck and Mickey Mouse}
-\journal{IEEE Transactions on Wireless Communications}
-\manuscript{TWC-2020-X}
-\editorname{Dr. Doom}
+\title{COFFER: An Efficient and Scalable TEE on RISC-V}
+\author{Anonymous Author(s)}
+\journal{IEEE Transactions on Information Forensics and Security}
+\manuscript{T-IFS-22131-2025}
+% \editorname{Dr. Doom}
 
 \begin{document}
 \maketitle
@@ -49,81 +49,53 @@
 \end{concludingresponse}
 
 
-% Reviewer 1
-\reviewer
-\begin{generalcomment}
-	General comment about the work.
-\end{generalcomment}
-\begin{revresponse}[Thank you for your feedback.]
-	We have carefully addressed all the issues item by item as follows.
-\end{revresponse}
-
-\begin{revcomment}
-	Your work is really good. However, you should change the title.
-\end{revcomment}
-\begin{revresponse}
-	We agree that the title is somewhat misleading.
-	We therefore changed it in the current version of the manuscript.
-\end{revresponse}
-
-\begin{revcomment}
-	Everything else is really good.
-\end{revcomment}
-\begin{revresponse}
-	We totally agree. We also added the following to the new version of the manuscript
-	\begin{changes}
-		This really important sentence was added to the paper.
-	\end{changes}
-\end{revresponse}
-
-\begin{concludingresponse}[]
-	Thank you for your valuable comments on our manuscript. 
-\end{concludingresponse}
+\include{responses/resp-1}
 
 % Reviewer 2
-\reviewer
-\label{rev:2}
-\begin{generalcomment}
-	In general, the work is well-written. However, I have the following concerns.
-\end{generalcomment}
-\begin{revresponse}[Thank you for your feedback.]
-	We have carefully addressed all the issues item by item as follows.
-\end{revresponse}
+% \reviewer
+% \label{rev:2}
+% \begin{generalcomment}
+% 	In general, the work is well-written. However, I have the following concerns.
+% \end{generalcomment}
+% \begin{revresponse}[Thank you for your feedback.]
+% 	We have carefully addressed all the issues item by item as follows.
+% \end{revresponse}
 
-\begin{revcomment}\label{comment:work-not-good}
-	The work is not really good.
-\end{revcomment}
-\begin{revresponse}
-	:(
-\end{revresponse}
+% \begin{revcomment}\label{comment:work-not-good}
+% 	The work is not really good.
+% \end{revcomment}
+% \begin{revresponse}
+% 	:(
+% \end{revresponse}
 
-\begin{revcomment}
-	You forgot to cite a very important reference (where I am an author)!
-\end{revcomment}
-\begin{revresponse}
-	We are aware that citations on Google Scholar are very important to you.
-	Therefore, we added reference \cite{ReviewerReference}.
+% \begin{revcomment}
+% 	You forgot to cite a very important reference (where I am an author)!
+% \end{revcomment}
+% \begin{revresponse}
+% 	We are aware that citations on Google Scholar are very important to you.
+% 	Therefore, we added reference \cite{ReviewerReference}.
 	
-	Also check out our article \cite{Besser2020}.
+% 	Also check out our article \cite{Besser2020}.
 	
-	\printpartbibliography{ReviewerReference,Besser2020}
+% 	\printpartbibliography{ReviewerReference,Besser2020}
 	
-	And btw, your \autoref{comment:work-not-good} was mean! (We can use the \verb|\autoref| command.)
-\end{revresponse}
+% 	And btw, your \autoref{comment:work-not-good} was mean! (We can use the \verb|\autoref| command.)
+% \end{revresponse}
 
 
-\reviewer
-\begin{revcomment}
-	Did you know, that the references can be separated for the individual reviewers?
-\end{revcomment}
-\begin{revresponse}
-	Yes. When using \href{https://www.ctan.org/pkg/biblatex}{biblatex}, you can use the \texttt{refsection=section} option to achieve that.
-	If we cite a new reference like \cite{Besser2021} here, it will again be number [1].
+% \reviewer
+% \begin{revcomment}
+% 	Did you know, that the references can be separated for the individual reviewers?
+% \end{revcomment}
+% \begin{revresponse}
+% 	Yes. When using \href{https://www.ctan.org/pkg/biblatex}{biblatex}, you can use the \texttt{refsection=section} option to achieve that.
+% 	If we cite a new reference like \cite{Besser2021} here, it will again be number [1].
 	
-	Note that you might have to run \texttt{pdflatex} and \texttt{biber} multiple times.
+% 	Note that you might have to run \texttt{pdflatex} and \texttt{biber} multiple times.
 	
-	And reference [1] for \autoref{rev:2}~\cite{ReviewerReference} is now number [2].
+% 	And reference [1] for \autoref{rev:2}~\cite{ReviewerReference} is now number [2].
 	
-	\printpartbibliography{Besser2021,ReviewerReference}
-\end{revresponse}
+% 	\printpartbibliography{Besser2021,ReviewerReference}
+% \end{revresponse}
+
 \end{document}

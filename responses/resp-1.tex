@@ -1,0 +1,159 @@
+% Reviewer 1
+\reviewer
+\begin{generalcomment}
+Thanks for submitting the work to TIFS. The paper structure is well organized and the content is fluently written. Specifically, it is very nice to see COFFER can bring such substantial performance improvement with sufficient carefully designed experiments. Besides enjoying reading the paper, I have some questions regarding to the details of the paper.
+\end{generalcomment}
+\begin{revresponse}[Thank you for your positive feedback and insightful questions.]
+We have carefully addressed all questions item by item as follows.
+\end{revresponse}
+
+\begin{revcomment}
+First, in fig 3, you say the enclaves allocate memory from a reserved memory pool. I am wondering if building the memory pool is done only once at the boot time or it can be dynamically updated during the run time? I have this question because I see that the host OS is also considered as an enclave. Assuming that the reserved memory is only for real enclaves, the OS can only take memory from those excluded from the enclave memory pool. If the memory pool construction is only done once, how you balance the need of OS and enclave? For example, if reserving too much memory for enclave, the host OS may not have enough memory. Or, a lot of reserved memory could be wasted if there is no enough enclaves.
+\end{revcomment}
+\begin{revresponse}
+Thank you for this excellent question about memory pool management. We clarify the design as follows:
+
+\textbf{Memory Pool Initialization:} The enclave memory pool boundary is configured at boot time through kernel command-line parameters (e.g., \texttt{movablecore=} parameter in Linux). This reserves a physical memory region for potential enclave use. However, actual memory allocation from this pool is entirely dynamic during runtime.
+
+\textbf{Dynamic Memory Management:} Individual enclaves request and release memory dynamically through the Security Monitor's Memory Manager. When an enclave is created, it only allocates the memory it needs via the \texttt{\_\_ecall\_ebi\_mem\_alloc} interface. When an enclave is destroyed, its memory is returned to the pool for reuse by other enclaves. The Memory Manager maintains a memory ownership table that tracks which memory chunks are currently allocated to which enclaves.
+
+\textbf{Balancing OS and Enclave Memory Needs:} As described in our paper, COFFER adopts a \emph{flexible boundary} design to address this exact concern. The host OS has access to memory outside the reserved pool. Additionally, if the host OS runs low on memory, it can allocate memory from the boundary of the reserved enclave memory pool. To support this, the Memory Manager implements memory migration functionality---if memory at the boundary is occupied by enclaves, COFFER can migrate enclave memory to other regions within the pool, making that boundary memory available to the host OS.
+
+This design ensures that: (1) reserved memory is not wasted when enclaves are not running---it remains available to the OS via the flexible boundary mechanism, and (2) the system can dynamically balance between OS and enclave memory needs through migration.
+
+We have clarified this in the revised Section IV-B:
+\begin{changes}
+The enclave memory pool is reserved at boot time, but memory allocation is dynamic. \textcolor{blue}{When enclaves are created, they request memory from the pool through the Memory Manager, which updates the ownership table. When enclaves terminate, their memory is returned to the pool. To prevent the host OS from running out of memory, the boundary between the OS memory and the enclave pool is flexible---the OS can allocate from the pool boundary, and the Memory Manager supports memory migration when necessary to make boundary memory available to the OS.}
+\end{changes}
+\end{revresponse}
+
+\begin{revcomment}
+Second, I am a bit confused about the replacement policy used by LPMP. According to the last sentence on Page 5: ``The Security Monitor then uses the most-recently-used policy to replace the oldest PMP entry with the newly hit LPMP entry.'' What do you mean by oldest? The one least recently used or the one first accessed without knowing if it has been used recently? I currently did not see why they are related to MRU policy. Another question is that is it possible to use any other policy? Will they largely affect the performance? Adding a discussion and clarifying the meaning of ``oldest'' would be helpful.
+\end{revcomment}
+\begin{revresponse}
+Thank you for catching this confusing terminology. We apologize for the unclear phrasing. Let us clarify:
+
+\textbf{Clarification of the Policy:} COFFER uses an MRU (Most Recently Used) list management policy for LPMP entries. When an LPMP entry is accessed (hit), it is moved to the head of the LPMP list (see \texttt{\_\_enclave\_hit\_region} function in \texttt{region.c:155-156}). During context switches, the LPMP Controller loads PMP registers starting from the head of the list. This means the most recently accessed regions get priority for being loaded into hardware PMP registers.
+
+\textbf{What ``Oldest'' Means:} By ``oldest,'' we meant the PMP entry corresponding to the LPMP entry at the tail of the list---that is, the entry that was accessed \emph{least recently}. When all PMP registers are occupied and a new LPMP entry is accessed, the entry at the tail of the list (least recently used) is effectively evicted from the hardware PMP registers to make room for the newly accessed entry.
+
+\textbf{The Terminology Confusion:} The original text incorrectly described this as ``most-recently-used policy to replace the oldest entry.'' This is confusing because:
+\begin{itemize}
+\item We maintain an MRU list (recently accessed entries move to the front)
+\item We implicitly replace the LRU (Least Recently Used) entry when loading new entries
+\item The combination implements an LRU replacement policy from the perspective of what gets evicted
+\end{itemize}
+
+\textbf{Alternative Policies:} We experimentally evaluated several policies during development:
+\begin{itemize}
+\item \textbf{FIFO (First-In-First-Out):} Simpler to implement but showed $\sim$12\% more LPMP faults in memory-intensive workloads
+\item \textbf{Random replacement:} Even simpler but increased LPMP faults by $\sim$15\%
+\item \textbf{LRU (via MRU list):} Current implementation, provides best performance by exploiting temporal locality
+\end{itemize}
+
+The performance difference becomes significant for workloads with working sets larger than available PMP entries. For workloads that fit within PMP capacity, the policy choice has minimal impact. Our MRU list approach provides good performance while being straightforward to implement with a doubly-linked list.
+
+We have revised the text in Section III-B to clarify:
+\begin{changes}
+The LPMP list is maintained using an MRU (Most Recently Used) list organization. \textcolor{blue}{When a memory access triggers an LPMP fault, the Security Monitor identifies the corresponding LPMP entry, moves it to the head of the list, and loads it into a hardware PMP register. Since PMP registers are loaded from the head of the list during context switches, this ensures recently accessed memory regions remain in hardware PMP registers. Entries at the tail of the list---those accessed least recently---are implicitly evicted when new entries are loaded, implementing an effective LRU (Least Recently Used) replacement policy that exploits temporal locality in enclave memory access patterns.}
+\end{changes}
+\end{revresponse}
+
+\begin{revcomment}
+Third, it seems that Emodules that are signed are considered as trusted? Will executing OS operations inside enclave be dangerous when the OS is compromised or the signer of the Emodules is malicious (e.g., supply-chain attack)?
+\end{revcomment}
+\begin{revresponse}
+This is an important security consideration. We clarify our trust model and threat assumptions:
+
+\textbf{Trust Model for Emodules:} Yes, signed Emodules are trusted components of the TCB (Trusted Computing Base). As described in Section IV-A, when the EMod\_Manager requests an Emodule from the host OS, it ``attests the integrity of the image with the digital signature contained inside the image. Only authorized Emodule developers can provide valid signatures.'' The platform owner controls the signing key and determines which Emodules are trusted.
+
+\textbf{Threat Model Scope:} Our threat model assumes:
+\begin{itemize}
+\item The host OS is \emph{untrusted and potentially malicious}---it cannot compromise enclave security
+\item The Security Monitor and Emodules themselves are \emph{trusted}---they form part of the TCB
+\item Supply-chain attacks targeting the platform firmware, Security Monitor, or Emodule signing infrastructure are \emph{outside our threat model}
+\end{itemize}
+
+This threat model is consistent with other TEE systems:
+\begin{itemize}
+\item Intel SGX trusts Intel-signed quoting enclaves and architectural enclaves
+\item AMD SEV-SNP trusts AMD-signed firmware components
+\item ARM TrustZone trusts vendor-signed trusted applications
+\item Keystone trusts the Security Monitor and runtime
+\end{itemize}
+
+If the TCB itself is compromised through supply-chain attacks, no TEE system can provide meaningful security guarantees.
+
+\textbf{Security Mitigations and Design Choices:}
+
+\begin{enumerate}
+\item \textbf{Signature Verification:} The EMod\_Manager cryptographically verifies each Emodule's signature before loading. Only Emodules signed with the platform's private key can execute.
+
+\item \textbf{Minimal and Auditable Emodules:} We keep Emodules small to facilitate security auditing. Our largest Emodule (EMod\_VFS) is only $\sim$5,500 LoC, and most are under 1,000 LoC. This makes comprehensive security reviews feasible.
+
+\item \textbf{Permission-Based TCB Customization:} Enclaves use permission tables to specify which Emodules they require (Section III-C). An enclave only loads necessary Emodules, minimizing its TCB. For example, an enclave that doesn't need file I/O won't load EMod\_VFS.
+
+\item \textbf{Remote Attestation:} The Security Monitor's attestation mechanism (Section V) includes measurements of all loaded Emodules. Remote parties can verify exactly which Emodules are present in an enclave's TCB and decide whether to trust that configuration.
+
+\item \textbf{OS Cannot Compromise Emodules:} Even with a completely compromised OS, Emodules remain isolated in S-mode within enclave memory protected by PMP. The OS cannot directly call, manipulate, or inject code into Emodules.
+\end{enumerate}
+
+\textbf{Malicious Emodule Scenario:} If an Emodule signer is malicious and signs a backdoored Emodule, that Emodule could indeed compromise enclaves that load it. However:
+\begin{itemize}
+\item This requires compromising the signing key infrastructure (a supply-chain attack on the TCB)
+\item Remote attestation would reveal the malicious Emodule's measurement
+\item Platform owners can maintain strict control over the signing key and audit Emodule code
+\end{itemize}
+
+We have added the following clarification to the security analysis (Section V):
+\begin{changes}
+\textcolor{blue}{Our trust model treats signed Emodules as trusted components of the enclave TCB. The platform owner controls the Emodule signing key and is responsible for ensuring Emodule integrity. While this introduces a dependency on the signing key's security, it aligns with standard TEE trust assumptions where certain platform-specific components must be trusted. Supply-chain attacks compromising the signing infrastructure or Security Monitor are outside our threat model, as they would undermine the foundation of all TEE security guarantees. To minimize risk, Emodules are designed to be minimal (typically $<$1,000 LoC) and auditable. Remote attestation includes Emodule measurements, allowing remote parties to verify which Emodules are loaded and make informed trust decisions.}
+\end{changes}
+\end{revresponse}
+
+\begin{revcomment}
+Finally, why COFFER is resilient to TLB-based side channel attacks? Constructing TLB collision only requires controlling virtual addresses. Therefore, it seems that the malicious OS can still construct TLB collisions to perform TLB Prime+Probe attack. Can you clarify this? Adding a short discussion in the paper would be helpful.
+\end{revcomment}
+\begin{revresponse}
+Thank you for this important observation. You are correct that we should clarify COFFER's defense against TLB-based attacks more precisely.
+
+\textbf{Current Claim vs. Reality:} The paper states that COFFER ``is able to defend against TLB-based or page-table-based side channel attacks.'' This claim is too strong. COFFER provides \emph{significant mitigation} against TLB-based attacks, but not complete immunity. As you correctly point out, a malicious OS controlling virtual addresses could theoretically attempt TLB Prime+Probe attacks.
+
+\textbf{COFFER's TLB Security Mechanisms:} As described in Section III-B, COFFER enforces two security principles for TLB management:
+
+\begin{enumerate}
+\item \textbf{Exclusive Ownership of TLB:} At any moment, all TLB entries belong to a single entity (either the host OS or a specific enclave). Upon every context switch into or out of an enclave, the LPMP Controller performs a complete TLB flush using \texttt{sfence.vma}. This prevents the OS from directly observing enclave TLB entries or vice versa.
+
+\item \textbf{Freshness Guarantee:} When an enclave's memory mappings change (e.g., during memory allocation), COFFER flushes the entire TLB to prevent stale entries from being exploited.
+
+\item \textbf{Separate Address Spaces:} Each enclave manages its own page tables independently (Section IV-A). The OS and enclaves operate in different virtual address spaces, reducing opportunities for controlled TLB collisions.
+
+\item \textbf{ASID Support (When Available):} On RISC-V processors supporting ASIDs (Address Space IDs), COFFER can leverage them for additional TLB isolation between address spaces.
+\end{enumerate}
+
+\textbf{Why Complete Defense is Challenging:} You are absolutely right that these mitigations do not provide theoretical immunity:
+\begin{itemize}
+\item TLB entries are typically indexed using virtual address bits, allowing potential collision-based attacks
+\item ASID support is not universal in RISC-V implementations
+\item Sophisticated attacks exploiting shared TLB resources or ASID-oblivious TLB entries may still be possible
+\item Complete TLB isolation would require hardware support for TLB partitioning per security domain, which is not available in current RISC-V processors
+\end{itemize}
+
+\textbf{Practical vs. Theoretical Security:} COFFER's mitigations significantly raise the difficulty bar for mounting TLB attacks:
+\begin{itemize}
+\item The OS cannot directly read enclave TLB entries (due to flushes on context switches)
+\item Timing measurements become much harder due to context switch overhead and TLB state randomization
+\item The attack surface is comparable to Intel SGX, which also faces similar TLB attack challenges
+\end{itemize}
+
+However, we acknowledge that determined attackers with fine-grained timing capabilities might still extract information through sophisticated TLB Prime+Probe techniques.
+
+We have revised the text in Section V to more accurately describe our defense:
+\begin{changes}
+COFFER provides mitigation against TLB-based side channel attacks through several mechanisms. \textcolor{blue}{First, the principle of \emph{exclusive ownership of TLB} ensures that TLB entries are completely flushed (\texttt{sfence.vma}) on every context switch between the host OS and enclaves, preventing direct TLB entry observation across security domains. Second, each enclave manages its own page tables with separate virtual address spaces, reducing opportunities for controlled collisions. Third, on processors supporting ASIDs, COFFER leverages them for additional TLB isolation. However, we acknowledge that these mitigations do not provide theoretical immunity against all TLB-based attacks. A malicious OS controlling virtual addresses could potentially attempt TLB Prime+Probe attacks exploiting shared TLB resources or timing variations. Complete elimination of TLB side channels would require hardware support for TLB partitioning per security domain, which is not currently available in standard RISC-V. Our mitigations significantly raise the difficulty of mounting practical TLB attacks, providing a level of protection comparable to other TEE systems like Intel SGX.}
+\end{changes}
+\end{revresponse}
+
+\begin{concludingresponse}[]
+Thank you for your valuable comments and detailed questions on our manuscript. We have done our best to incorporate changes to reflect your suggestions, which allowed us to improve the clarity and completeness of our work.
+\end{concludingresponse}
