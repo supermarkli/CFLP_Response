@@ -12,3 +12,4 @@
 *.bbl-*
 *.pdf
 !review_response.pdf
+!figures/*.pdf
