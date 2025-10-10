@@ -1,4 +1,4 @@
-\documentclass[12pt,english]{reviewresponse}
+\documentclass[12pt,english]{article}
 
 %% Language
 \usepackage{babel}
@@ -12,17 +12,29 @@
 %\usepackage[scaled]{beramono} % different monospace font
 
 
+%% Foot
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage[a4paper,total={160mm,245mm},left=25mm,top=25mm]{geometry}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{.5pt}
+\usepackage[shortlabels]{enumitem}
+\newlist{detail}{itemize}{3}
+\setlist[detail, 1]{label=\textbullet,leftmargin=21pt,nosep}
+
+
+%% Review Response Package
+\usepackage[journal={IEEE Transactions on Information Forensics and Security},
+            manuscript={T-IFS-22131-2025}]{reviewresponse}
+
 %% Bibliography
 \usepackage[backend=biber,style=ieee,dashed=false,url=false,isbn=false,defernumbers=true,refsection=section]{biblatex}
 \bibliography{literature.bib}
 
 \usepackage{hyperref}
 
-
 \title{COFFER: An Efficient and Scalable TEE on RISC-V}
 \author{Anonymous Author(s)}
-\journal{IEEE Transactions on Information Forensics and Security}
-\manuscript{T-IFS-22131-2025}
 % \editorname{Dr. Doom}
 
 \begin{document}
@@ -30,6 +42,11 @@
 
 % Cover Letter
 \input{cover_letter.tex}
+\setcounter{page}{0}
+\pagestyle{fancy}
+\fancyfoot[R]{\thepage\ / \pageref{LastPage}}
+\fancyfoot[L]{Response Letter for T-IFS-22131-2025\fancyfoot}
+\fancyfoot[C]{\ }
 
 % Response to Editor
 \editor
@@ -52,52 +69,5 @@
 \include{responses/resp-1}
 \include{responses/resp-2}
 \include{responses/resp-3}
-
-% Reviewer 2
-% \reviewer
-% \label{rev:2}
-% \begin{generalcomment}
-% 	In general, the work is well-written. However, I have the following concerns.
-% \end{generalcomment}
-% \begin{revresponse}[Thank you for your feedback.]
-% 	We have carefully addressed all the issues item by item as follows.
-% \end{revresponse}
-
-% \begin{revcomment}\label{comment:work-not-good}
-% 	The work is not really good.
-% \end{revcomment}
-% \begin{revresponse}
-% 	:(
-% \end{revresponse}
-
-% \begin{revcomment}
-% 	You forgot to cite a very important reference (where I am an author)!
-% \end{revcomment}
-% \begin{revresponse}
-% 	We are aware that citations on Google Scholar are very important to you.
-% 	Therefore, we added reference \cite{ReviewerReference}.
-	
-% 	Also check out our article \cite{Besser2020}.
-	
-% 	\printpartbibliography{ReviewerReference,Besser2020}
-	
-% 	And btw, your \autoref{comment:work-not-good} was mean! (We can use the \verb|\autoref| command.)
-% \end{revresponse}
-
-
-% \reviewer
-% \begin{revcomment}
-% 	Did you know, that the references can be separated for the individual reviewers?
-% \end{revcomment}
-% \begin{revresponse}
-% 	Yes. When using \href{https://www.ctan.org/pkg/biblatex}{biblatex}, you can use the \texttt{refsection=section} option to achieve that.
-% 	If we cite a new reference like \cite{Besser2021} here, it will again be number [1].
-	
-% 	Note that you might have to run \texttt{pdflatex} and \texttt{biber} multiple times.
-	
-% 	And reference [1] for \autoref{rev:2}~\cite{ReviewerReference} is now number [2].
-	
-% 	\printpartbibliography{Besser2021,ReviewerReference}
-% \end{revresponse}
 
 \end{document}
