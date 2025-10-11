@@ -28,7 +28,8 @@
 
 %% Review Response Package
 \usepackage[journal={IEEE Transactions on Information Forensics and Security},
-            manuscript={T-IFS-22131-2025}]{reviewresponse}
+            manuscript={T-IFS-22131-2025},
+			editor={Dr. Jason}]{reviewresponse}
 
 %% Bibliography
 \usepackage[backend=biber,style=ieee,dashed=false,url=false,isbn=false,defernumbers=true,refsection=section]{biblatex}
@@ -38,7 +39,6 @@
 
 \title{COFFER: An Efficient and Scalable TEE on RISC-V}
 \author{Anonymous Author(s)}
-% \editorname{Dr. Doom}
 
 \begin{document}
 \maketitle
@@ -54,18 +54,29 @@
 % Response to Editor
 \editor
 \begin{generalcomment}
-	The reviewer(s) have suggested some minor revisions to your manuscript. Therefore, I invite you to respond to the reviewer(s)' comments and revise your manuscript.
+	Based on the enclosed set of reviews, your manuscript requires a MAJOR REVISION (RQ).
 \end{generalcomment}
-\begin{revresponse}[We appreciate your handling of the review process.]
-	According to the reviewers' comments, we have checked our manuscript and addressed them in the following way:
+\begin{revresponse}[We sincerely appreciate your handling of the review process and the constructive feedback from all three reviewers.]
+	We are grateful for the reviewers' recognition of COFFER's contributions to RISC-V confidential computing, particularly the LPMP framework for overcoming hardware scalability limitations and the EModules design for balancing enclave autonomy with minimal TCB. The reviewers have provided valuable suggestions that have significantly strengthened our work.
+	
+	According to the reviewers' comments, we have carefully addressed all concerns and suggestions through the following major revisions:
+	
 	\begin{enumerate}
-		\item We added content.
-		\item We removed our wrong statements in Section~I.
+		\item \textbf{Enhanced Design Clarifications:} We expanded Section IV-B to clarify the dynamic memory management mechanisms, including the flexible boundary design that balances OS and enclave memory needs. We also clarified the LPMP replacement policy (Section III-B), correcting the terminology from ``most-recently-used policy to replace the oldest entry'' to accurately describe the LRU replacement implemented via MRU list organization.
+		
+		\item \textbf{Strengthened Security Analysis:} We significantly expanded Section VI to address multiple security concerns. This includes: (a) comprehensive I/O security discussion covering MMIO protection, secure message channels, memory ownership transfer, DMA mitigation strategies, and hardware integration roadmap; (b) refined side-channel discussion clarifying the scope distinction between broadly excluded side-channels and specific mitigations as derivative advantages of COFFER's design; (c) comprehensive EModule ecosystem security covering lifecycle management, supply-chain attack mitigation, revocation mechanisms, and compartmentalization; (d) expanded threat model discussion addressing microarchitectural attacks, physical attacks, and security-performance tradeoffs.
+		
+		\item \textbf{Improved Evaluation and Analysis:} We added multi-core configuration details to Section VII-A, specifying that experiments use all four cores of the HiFive Unmatched board. We expanded Section IV-C to provide comprehensive LPMP scalability analysis addressing theoretical limits, memory footprint scalability, TLB flushing impact, and hardware dependency. We also added discussion of hardware compatibility across platforms with and without TLB-cached PMP checking.
+		
+		\item \textbf{Clarified Trust Model and TCB Boundaries:} We explicitly clarified the isolation relationships between EModules in Section VI, stating that all EModules within an enclave share the same S-Mode protection domain while maintaining strict inter-enclave isolation. We also enhanced the trust model discussion for signed EModules, addressing supply-chain attack concerns and remote attestation capabilities.
+		
+		\item \textbf{Added Future Work Discussion:} Following Reviewer 2's suggestion, we added discussion in the Conclusion section acknowledging that direct quantitative performance comparison against other TEEs across varying enclave counts would complement our feature-based analysis, while characterizing the technical challenges involved.
 	\end{enumerate}
+	
+	These revisions have substantially improved the clarity, completeness, and rigor of our manuscript, addressing all reviewer concerns while maintaining focus on COFFER's core contributions to scalable and efficient TEEs on commodity RISC-V platforms.
 \end{revresponse}
 \begin{concludingresponse}[to the Editor]
-	Thank you for your valuable comments on our manuscript. 
-	We have done our best to incorporate changes to reflect the suggestions, which allowed us to improve the quality of our work.
+	We sincerely thank you and the reviewers for the valuable feedback on our manuscript. The review process has been exceptionally constructive, and the detailed comments have allowed us to significantly improve the quality, clarity, and completeness of our work. We believe the revised manuscript now provides a more comprehensive treatment of COFFER's design, security analysis, and practical deployment considerations. We hope that these revisions adequately address all concerns and demonstrate COFFER's significant contribution to the RISC-V confidential computing community.
 \end{concludingresponse}
 
 
