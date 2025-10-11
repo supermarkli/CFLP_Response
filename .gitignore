@@ -11,5 +11,6 @@
 *.bcf-*
 *.bbl-*
 *.pdf
+*.toc
 !review_response.pdf
 !figures/*.pdf

@@ -8,7 +8,7 @@ We sincerely thank the reviewer for the thoughtful and constructive feedback, as
 
 %% ---------------------- 2.1 ------------------------------
 
-\begin{revcomment}
+\begin{revcomment}{Comparison with Related Work}
 Regarding Comparison with Related Work (Future Work Outlook)
 
 The paper effectively employs a feature-based comparison (Table VI) to position COFFER's contributions clearly against prior art, which is very useful. A natural next step to further solidify the performance claims—specifically, to vividly illustrate the scalability breakthrough when the number of enclaves exceeds the limits of standard PMP—would be a direct, quantitative performance comparison. For instance, plotting the aggregate throughput or latency against increasing enclave counts for both COFFER and a baseline like Keystone on the same hardware would powerfully demonstrate the transition from "architecturally infeasible" to "feasible and efficient."
@@ -32,7 +32,7 @@ We believe this addition provides valuable guidance to the community on how dire
 
 %% ---------------------- 2.2 ------------------------------
 
-\begin{revcomment}
+\begin{revcomment}{Multi-core Configuration Clarification}
 Regarding Clarification of Multi-core Configuration (Suggestion)
 
 The design claims support for multi-core concurrent execution. To provide clarity, I suggest that the authors briefly state the multi-core configuration used in the relevant experiments (e.g., specify how many processor cores were utilized for the concurrent enclave test in Figure 6a). This simple clarification will help readers better understand the system's behavior on real hardware.
@@ -54,7 +54,7 @@ This clarification helps readers understand that the demonstrated scalability ap
 
 %% ---------------------- 2.3 ------------------------------
 
-\begin{revcomment}
+\begin{revcomment}{EModules Internal Security Model}
 Regarding Clarification of the EModules Internal Security Model (Suggestion)
 
 The EModules design is a significant contribution. To precisely define the enclave's TCB and prevent reader confusion, I recommend that the authors explicitly state the isolation relationship between different EModules (e.g., whether they reside in the same protection domain) in the Security Analysis (§VI) or Design (§IV-C) sections. Clarifying this key design choice will greatly enhance the paper's rigor and clarity.
@@ -86,7 +86,7 @@ We believe these additions precisely define the TCB boundary and clarify the iso
 
 %% ---------------------- 2.4 ------------------------------
 
-\begin{revcomment}
+\begin{revcomment}{Side-Channel Discussion Refinement}
 Regarding Refinement of the Side-Channel Discussion (Suggestion)
 
 The threat model appropriately excludes microarchitectural side-channel attacks requiring hardware modifications, and the paper insightfully notes that its design can mitigate TLB and page-table-based channels. To make the logic more rigorous, I suggest the authors briefly clarify the scope of side-channels discussed, explicitly stating that the channels excluded in §III and those discussed in §VI.A represent different subsets, with the latter being a "derivative advantage" of the architecture.

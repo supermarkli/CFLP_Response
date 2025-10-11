@@ -16,7 +16,7 @@ We sincerely thank the reviewer for the comprehensive evaluation and recognition
 
 %% --------- 3.1: I/O Security Model -------------
 
-\begin{revcomment}
+\begin{revcomment}{I/O Security Model}
 Incomplete I/O Security Model. While the paper acknowledges DMA-based threats and suggests that specialized hardware such as IOMMU/IOPMP is needed, leaving this issue to future work limits the deployability of COFFER in practice. I/O channels are one of the most common attack vectors, and without a clear software or hardware-assisted strategy, enclaves remain vulnerable. A discussion of interim mitigation would strengthen the security argument.
 \end{revcomment}
 
@@ -44,7 +44,7 @@ This comprehensive approach provides practical I/O security for current RISC-V p
 
 %% -------- 3.2: LPMP Scalability Limitations --------
 
-\begin{revcomment}
+\begin{revcomment}{LPMP Scalability and Sharing}
 Scalability and Sharing Limitations. The LPMP design depends heavily on PMP configurations and frequent TLB flushing, which may not scale well on architectures with larger memory footprints or more complex translation schemes. The paper does not analyze the performance cost under such scenarios. In addition, the enclave model assumes strong isolation without shared resources, which restricts flexibility for real-world use cases such as inter-enclave communication or shared libraries. Exploring controlled sharing policies could improve practicality.
 \end{revcomment}
 
@@ -72,7 +72,7 @@ This analysis demonstrates that while LPMP has theoretical scalability limits, t
 
 %% -------- 3.3: EModule Ecosystem Risks --------
 
-\begin{revcomment}
+\begin{revcomment}{EModule Ecosystem Security}
 Risks in the EModule Ecosystem. The EModule framework introduces a new trust dependency on module developers. Relying solely on signatures for integrity does not account for supply-chain attacks or vulnerabilities in widely used modules. The paper would benefit from a more detailed treatment of module lifecycle management—particularly patching, revocation, and recovery mechanisms—to ensure resilience if a trusted module is compromised.
 \end{revcomment}
 
@@ -102,7 +102,7 @@ This comprehensive approach addresses the full spectrum of EModule ecosystem ris
 
 %% -------- 3.4: Hardware Dependency Issues --------
 
-\begin{revcomment}
+\begin{revcomment}{Hardware Dependency and Compatibility}
 Hardware Dependency of LPMP Optimizations. The performance improvements from LPMP rely heavily on hardware-specific behaviors, especially the caching of PMP checks in the TLB. This may not be present across all RISC-V implementations. Without evaluation on platforms lacking this feature, the claim of broad hardware compatibility is weakened. Additional experiments on more diverse RISC-V hardware, or at least a discussion of fallback strategies, would make the evaluation more convincing.
 \end{revcomment}
 
@@ -132,7 +132,7 @@ This comprehensive analysis demonstrates that COFFER's hardware compatibility ex
 
 %% -------- 3.5: Limited Security Analysis -----------
 
-\begin{revcomment}
+\begin{revcomment}{Security Analysis and Trade-offs}
 Limited Security Analysis and Trade-offs. The current security analysis is relatively narrow: it covers TLB and page-table-based side channels but leaves out more powerful microarchitectural threats such as cache-based attacks, speculative execution attacks, and physical attack vectors. This omission leaves enclaves potentially vulnerable. Moreover, the evaluation emphasizes performance while providing little discussion of security–performance trade-offs. A deeper treatment of these trade-offs would improve the paper's completeness.
 \end{revcomment}
 

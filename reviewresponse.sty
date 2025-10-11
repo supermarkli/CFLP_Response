@@ -86,15 +86,22 @@
 		\pdfbookmark[1]{Reponse to the Associate Editor}{hyperref@editor}%
 	}%
 	\section*{\textbf{Response to the Associate Editor}}
+	\addcontentsline{toc}{section}{Response to the Associate Editor}
 }
 
-\newcommand{\reviewer}{
+\newcommand{\reviewer}[1][]{
 	\clearpage
 	\refstepcounter{reviewer@counter}%
 	\@ifundefined{pdfbookmark}{}{%
 		\pdfbookmark[1]{Reviewer \arabic{reviewer@counter}}{hyperref@reviewer\arabic{reviewer@counter}}%
 	}%
-	\section*{\textbf{\bfseries{Response to Reviewer \arabic{reviewer@counter}}}}
+	\ifx&#1&%
+		\section*{\textbf{\bfseries{Response to Reviewer \arabic{reviewer@counter}}}}
+		\addcontentsline{toc}{section}{Response to Reviewer \arabic{reviewer@counter}}
+	\else
+		\section*{\textbf{\bfseries{Response to #1}}}
+		\addcontentsline{toc}{section}{Response to #1}
+	\fi
 }
 %%%
 
@@ -104,8 +111,15 @@
 	\begin{tcolorbox}[adjusted title={Summary Comment}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,boxrule=0em,opacityframe=0,colback={colorcommentbg}]
 }{\end{tcolorbox}}
 
-\newenvironment{revcomment}[1][]{\refstepcounter{reviewcomment@counter}
-	\begin{tcolorbox}[adjusted title={Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]
+\newenvironment{revcomment}[2][]{%
+	\refstepcounter{reviewcomment@counter}%
+	\ifx&#2&%
+		\begin{tcolorbox}[adjusted title={Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]%
+		\addcontentsline{toc}{subsection}{Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}%
+	\else%
+		\begin{tcolorbox}[adjusted title={Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}: #2}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]%
+		\addcontentsline{toc}{subsection}{Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}: #2}%
+	\fi%
 }{\end{tcolorbox}}
 
 \newenvironment{revresponse}[1][{}]{%

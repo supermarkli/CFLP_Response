@@ -9,7 +9,7 @@ We have carefully addressed all questions item by item as follows.
 
 %% -------------------------------1.1-----------------------------------------
 
-\begin{revcomment}
+\begin{revcomment}{Memory Pool Management}
 First, in fig 3, you say the enclaves allocate memory from a reserved memory pool. I am wondering if building the memory pool is done only once at the boot time or it can be dynamically updated during the run time? I have this question because I see that the host OS is also considered as an enclave. Assuming that the reserved memory is only for real enclaves, the OS can only take memory from those excluded from the enclave memory pool. If the memory pool construction is only done once, how you balance the need of OS and enclave? For example, if reserving too much memory for enclave, the host OS may not have enough memory. Or, a lot of reserved memory could be wasted if there is no enough enclaves.
 \end{revcomment}
 
@@ -43,7 +43,7 @@ In response, we have expanded the Section IV-B to provide a more comprehensive o
 %% -------------------------------1.2-----------------------------------------
 
 
-\begin{revcomment}
+\begin{revcomment}{LPMP Replacement Policy}
 Second, I am a bit confused about the replacement policy used by LPMP. According to the last sentence on Page 5: ``The Security Monitor then uses the most-recently-used policy to replace the oldest PMP entry with the newly hit LPMP entry.'' What do you mean by oldest? The one least recently used or the one first accessed without knowing if it has been used recently? I currently did not see why they are related to MRU policy. Another question is that is it possible to use any other policy? Will they largely affect the performance? Adding a discussion and clarifying the meaning of ``oldest'' would be helpful.
 \end{revcomment}
 \begin{revresponse}
@@ -67,7 +67,7 @@ The LPMP list is maintained using an MRU (Most Recently Used) list organization.
 %% ------------------------------1.3------------------------------------------
 
 
-\begin{revcomment}
+\begin{revcomment}{EModule Trust Model and Security}
 Third, it seems that Emodules that are signed are considered as trusted? Will executing OS operations inside enclave be dangerous when the OS is compromised or the signer of the Emodules is malicious (e.g., supply-chain attack)?
 \end{revcomment}
 \begin{revresponse}
@@ -88,10 +88,10 @@ Our trust model treats signed Emodules as trusted components of the enclave TCB.
 \end{revresponse}
 
 
-%% -------------------------------1.4-----------------------------------------
+%% -------------------------------1.4--------------------------------------
 
 
-\begin{revcomment}
+\begin{revcomment}{TLB-based Side Channel Attacks}
 Finally, why COFFER is resilient to TLB-based side channel attacks? Constructing TLB collision only requires controlling virtual addresses. Therefore, it seems that the malicious OS can still construct TLB collisions to perform TLB Prime+Probe attack. Can you clarify this? Adding a short discussion in the paper would be helpful.
 \end{revcomment}
 \begin{revresponse}
