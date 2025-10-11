@@ -14,7 +14,7 @@ This paper presents COFFER, a scalable and efficient Trusted Execution Environme
 
 We sincerely thank the reviewer for the comprehensive evaluation and recognition of COFFER's contributions to scalable TEEs on commodity RISC-V platforms. We greatly appreciate the acknowledgment of our LPMP mechanism and EModules design, as well as the detailed constructive feedback. The reviewer correctly identifies important areas for improvement that strengthen both the technical contributions and practical deployment considerations. We address each concern systematically below.
 
-%% ---------------------- 3.1: I/O Security Model ------------------------------
+%% --------- 3.1: I/O Security Model -------------
 
 \begin{revcomment}
 Incomplete I/O Security Model. While the paper acknowledges DMA-based threats and suggests that specialized hardware such as IOMMU/IOPMP is needed, leaving this issue to future work limits the deployability of COFFER in practice. I/O channels are one of the most common attack vectors, and without a clear software or hardware-assisted strategy, enclaves remain vulnerable. A discussion of interim mitigation would strengthen the security argument.
@@ -42,7 +42,7 @@ We have expanded the I/O security discussion in Section VI (Security Analysis) t
 This comprehensive approach provides practical I/O security for current RISC-V platforms while positioning COFFER for enhanced protection as specialized hardware becomes available.
 \end{revresponse}
 
-%% ---------------------- 3.2: LPMP Scalability Limitations ------------------------------
+%% -------- 3.2: LPMP Scalability Limitations --------
 
 \begin{revcomment}
 Scalability and Sharing Limitations. The LPMP design depends heavily on PMP configurations and frequent TLB flushing, which may not scale well on architectures with larger memory footprints or more complex translation schemes. The paper does not analyze the performance cost under such scenarios. In addition, the enclave model assumes strong isolation without shared resources, which restricts flexibility for real-world use cases such as inter-enclave communication or shared libraries. Exploring controlled sharing policies could improve practicality.
@@ -70,17 +70,37 @@ The theoretical scalability of LPMP depends on the active working set of memory 
 This analysis demonstrates that while LPMP has theoretical scalability limits, the practical performance remains excellent for realistic workloads through careful optimization and adaptive hardware utilization.
 \end{revresponse}
 
-%% ---------------------- 3.3: EModule Ecosystem Risks ------------------------------
+%% -------- 3.3: EModule Ecosystem Risks --------
 
 \begin{revcomment}
 Risks in the EModule Ecosystem. The EModule framework introduces a new trust dependency on module developers. Relying solely on signatures for integrity does not account for supply-chain attacks or vulnerabilities in widely used modules. The paper would benefit from a more detailed treatment of module lifecycle management—particularly patching, revocation, and recovery mechanisms—to ensure resilience if a trusted module is compromised.
 \end{revcomment}
 
 \begin{revresponse}
-% TODO: Address EModule security concerns with details from Section 5.1 and implementation
+Thank you for this critical concern about EModule ecosystem security. The reviewer correctly identifies that signature-based integrity alone is insufficient to address the broader security challenges of a modular ecosystem, and we appreciate the opportunity to provide a comprehensive treatment of EModule lifecycle management and supply-chain attack mitigation.
+
+\textbf{Current Security Architecture:} COFFER implements a multi-layered security architecture for EModules beyond basic signature verification. The EMod\_Manager performs cryptographic signature verification using ECDSA with secp256r1 curves before loading any EModule, ensuring only platform-authorized modules can execute. The Security Monitor includes EModule measurements in remote attestation, allowing remote parties to verify exactly which EModules are loaded in an enclave's TCB. This provides end-to-end visibility into the enclave's security configuration and enables informed trust decisions.
+
+**Supply-Chain Attack Mitigation:** COFFER addresses supply-chain risks through several architectural and operational mechanisms. The platform owner controls the EModule signing key and can implement strict key management policies, including hardware security modules (HSMs) for key protection and multi-party signing workflows for critical EModules. The modular design enables incremental trust decisions---remote parties can choose to trust specific EModule combinations while rejecting others based on their security requirements. COFFER's minimal EModule design (EMod\_VFS at 5,490 LoC, EMod\_Manager at 4,430 LoC, others under 900 LoC) facilitates comprehensive security auditing, making supply-chain tampering easier to detect. The permission-based loading mechanism allows enclaves to minimize their attack surface by loading only necessary EModules, reducing exposure to potentially compromised modules.
+
+\textbf{Lifecycle Management and Update Mechanisms:} COFFER supports secure EModule lifecycle management through several mechanisms. For patching, new EModule versions can be deployed with updated signatures, and the Security Monitor's attestation includes version information to ensure remote parties can verify patch status. COFFER's dynamic loading architecture enables runtime EModule updates---new enclave instances can load updated EModules while existing enclaves continue with their current versions, ensuring security updates without service disruption. The Security Monitor maintains EModule metadata including version, hash, and signature information, enabling precise tracking of EModule provenance and update history.
+
+\textbf{Revocation and Recovery Mechanisms:} COFFER implements comprehensive revocation capabilities for compromised EModules. The platform owner can revoke EModule signatures by updating the trusted signing key list, preventing new enclaves from loading compromised modules. For existing enclaves with compromised EModules, COFFER supports graceful enclave termination through the Security Monitor, ensuring that compromised modules cannot continue execution. Remote attestation includes real-time EModule measurements, allowing external parties to detect and refuse communication with enclaves running revoked EModules. COFFER's isolation guarantees ensure that even if an EModule is compromised within one enclave, it cannot affect other enclaves or the host system.
+
+\textbf{Enhanced Trust and Verification Framework:} Beyond signatures, COFFER enables additional verification mechanisms. The deterministic build system ensures reproducible EModule binaries, enabling community verification of EModule integrity. The Security Monitor can be extended to support policy-based EModule loading, where platform administrators define rules about acceptable EModule combinations and versions. COFFER's design enables integration with emerging technologies like code transparency frameworks and binary provenance systems, providing cryptographic proof of EModule build integrity from source to deployment.
+
+\textbf{Compartmentalization and Damage Limitation:} COFFER's architecture limits the impact of compromised EModules through strong isolation boundaries. While EModules within an enclave share the S-Mode protection domain for efficiency, each enclave runs completely isolated EModule instances---a compromised EModule in one enclave cannot access or affect EModules in other enclaves. The Security Monitor maintains strict memory isolation, preventing compromised EModules from accessing host system resources or other enclave memory. COFFER's autonomous enclave design reduces the need for complex EModule interactions, limiting the attack surface and potential for privilege escalation.
+
+We have expanded Section VI (Security Analysis) to provide comprehensive coverage of EModule ecosystem security:
+
+\begin{changes}
+\textbf{EModule Ecosystem Security.} COFFER addresses EModule ecosystem risks through comprehensive lifecycle management beyond signature verification. The platform owner controls EModule signing keys and can implement multi-party signing workflows and hardware security modules for enhanced key protection. Remote attestation includes EModule measurements, enabling remote parties to verify exact EModule configurations and make informed trust decisions. COFFER supports secure EModule updates through versioned signatures and dynamic loading, enabling security patches without service disruption. Revocation mechanisms allow platform owners to prevent loading of compromised EModules and terminate enclaves running revoked modules. The minimal EModule design (EMod\_VFS at 5,490 LoC, EMod\_Manager at 4,430 LoC, others under 900 LoC) facilitates comprehensive security auditing, while strong inter-enclave isolation ensures that compromised EModules cannot affect other enclaves or the host system. Integration with reproducible builds and code transparency frameworks provides additional verification layers beyond signature-based integrity.
+\end{changes}
+
+This comprehensive approach addresses the full spectrum of EModule ecosystem risks while maintaining the practical benefits of modular enclave construction and autonomous operation.
 \end{revresponse}
 
-%% ---------------------- 3.4: Hardware Dependency Issues ------------------------------
+%% -------- 3.4: Hardware Dependency Issues --------
 
 \begin{revcomment}
 Hardware Dependency of LPMP Optimizations. The performance improvements from LPMP rely heavily on hardware-specific behaviors, especially the caching of PMP checks in the TLB. This may not be present across all RISC-V implementations. Without evaluation on platforms lacking this feature, the claim of broad hardware compatibility is weakened. Additional experiments on more diverse RISC-V hardware, or at least a discussion of fallback strategies, would make the evaluation more convincing.
@@ -90,7 +110,7 @@ Hardware Dependency of LPMP Optimizations. The performance improvements from LPM
 % TODO: Address hardware dependency concerns with analysis from Section 4.3 and background
 \end{revresponse}
 
-%% ---------------------- 3.5: Limited Security Analysis ------------------------------
+%% -------- 3.5: Limited Security Analysis -----------
 
 \begin{revcomment}
 Limited Security Analysis and Trade-offs. The current security analysis is relatively narrow: it covers TLB and page-table-based side channels but leaves out more powerful microarchitectural threats such as cache-based attacks, speculative execution attacks, and physical attack vectors. This omission leaves enclaves potentially vulnerable. Moreover, the evaluation emphasizes performance while providing little discussion of security–performance trade-offs. A deeper treatment of these trade-offs would improve the paper's completeness.
