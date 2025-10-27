@@ -1,0 +1,20 @@
+\section{Revision Summary}
+
+\indent \indent
+Based on the reviewers' insightful comments, we improve the paper in four major aspects: xx, xx, xx, and xx.
+
+\subsection{Scalable and Efficient Memory Isolation}
+
+\textbf{Symmetric host/enclave treatment.}\label{sec:symmetric} In practice, the enclave memory pool is reserved at boot time, while actual allocations from this pool are fully dynamic at runtime. When enclaves are created, they request memory from the pool through the \aclu{MM}, which updates an ownership table to track which memory chunks belong to which enclave. When enclaves terminate, their memory is returned to the pool for reuse. The flexible boundary ensures that if the host OS experiences memory pressure, it can allocate from the edge of the reserved enclave pool; if that boundary region is occupied by enclaves, the \aclu{MM} migrates enclave memory to other regions within the pool to make boundary memory available to the host OS.
+
+\noindent\textbf{Virtualizing PMP entries.}\label{sec:lpmp-replacement} The \aclu{LC} maintains the LPMP list in a MRU (Most Recently Used) order: when a LPMP entry is accessed (hit), it is moved to the head of the list and loaded into a hardware PMP register. Entries at the tail of the list --- those accessed least recently --- are implicitly evicted from hardware PMP registers when new entries are loaded. This effectively implements an LRU (least recently used) replacement policy for what gets evicted, leveraging temporal locality in enclave memory access patterns. Furthermore, we have evaluated some other replacement policies, and the results \textbf{TODO: Figure Ref} shows that the MRU policy gets the best overall performance.
+
+\subsection{TCB} \label{sec:TCB}
+
+All \acp{EModule} within a single enclave execute in the same S-mode protection domain and are not shared across enclaves; each enclave loads its own private instances according to its permission table. This precisely defines the enclave TCB boundary and avoids cross-enclave sharing.
+
+\noindent \textbf{EModule ecosystem security.}
+Beyond signature verification, \work supports practical lifecycle hardening for \acp{EModule}. The platform owner controls signing keys and can adopt stronger key management (e.g., HSM-backed keys, multi-party signing). Attestation mechanisms include module measurements, enabling relying parties to verify the exact module set and versions. Minimal module sizes facilitate auditing; permission tables let enclaves include only necessary modules, reducing exposure. These mechanisms help contain supply-chain risks and enable patching and policy-based control as the ecosystem matures.
+
+\noindent \textbf{Security–performance tradeoffs.}
+\work trades trap-and-emulate overhead for fine-grained memory isolation. The instruction/data split and optional TLB-enhancement recover most of the lost performance while preserving isolation via exclusive ownership and freshness principles. The autonomous design increases enclave-side TCB (e.g., \texttt{EMod\_Manager}) to reduce dependence on an untrusted OS, eliminating Iago and controlled-channel attack surfaces.
