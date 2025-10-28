@@ -4,7 +4,7 @@
 This paper presents COFFER, a scalable and efficient software-based Trusted Execution Environment (TEE) for standard RISC-V platforms. The authors ingeniously address the core scalability bottleneck in RISC-V TEEs—the limited number of enclaves and support for fragmented memory—by introducing the innovative LPMP framework, which virtualizes the constrained PMP hardware resources. Furthermore, the proposed EModules design offers a promising solution for striking a balance between enclave autonomy and a minimal Trusted Computing Base (TCB). The work is well-motivated, with a precise problem definition, elegant design, solid engineering implementation, and a comprehensive evaluation. The performance data, particularly the support for over 2,000 concurrent enclaves and the low overhead under worst-case memory fragmentation, is highly impressive. COFFER presents significant practical value and an immediate contribution to the RISC-V confidential computing community. I support the acceptance of this paper after it incorporates the following minor revisions.
 \end{generalcomment}
 
-We sincerely thank the reviewer for the thoughtful and constructive feedback, as well as the recognition of COFFER's contributions to RISC-V confidential computing. We are grateful for the specific suggestions to further strengthen our work and address them point-by-point below.
+Sincerely thanks for the thoughtful and constructive feedback. We are grateful for the specific suggestions to further strengthen our work and address them point-by-point below.
 
 %% ---------------------- 2.1 ------------------------------
 
@@ -17,17 +17,24 @@ I understand that conducting such a comprehensive performance benchmarking again
 \end{revcomment}
 
 \begin{revresponse}
-We greatly appreciate this insightful suggestion. The reviewer is absolutely correct that a direct quantitative performance comparison would powerfully illustrate COFFER's scalability breakthrough, particularly in scenarios where the number of enclaves exceeds the PMP hardware limits (implementation-defined, typically 8-16 entries on RISC-V platforms).
+Thank you for this insightful suggestion regarding quantitative performance comparison. We appreciate the opportunity to clarify the nature of \work's scalability breakthrough and our evaluation methodology.
 
-As the reviewer correctly notes, conducting such a comprehensive comparison would require non-trivial porting efforts. Specifically, systems like Keystone are fundamentally limited by the number of available PMP entries in their current architecture, making it infeasible to run them with enclave counts exceeding this hardware constraint. To conduct a fair comparison, we would need to either: (1) significantly modify Keystone's architecture to support PMP virtualization (which would essentially reimplement LPMP in Keystone), or (2) compare only within the PMP-limited range, which would not demonstrate COFFER's key scalability advantage.
+We believe there may be a slight misunderstanding regarding what aspect of performance would exceed PMP limits. The key insight is that \work's LPMP design decouples the number of concurrent enclaves from PMP hardware constraints. Each enclave maintains its own private LPMP list, which is loaded into the standard PMP configuration during context switches. Therefore, the number of concurrent enclaves does not directly impact individual enclave performance---whether running 10 or 2,000 enclaves, each enclave experiences comparable performance when scheduled. As demonstrated in Figure~6a of Section~VII-A, the overhead remains stable (within 5\%) even when scaling from a single enclave to 2,048 concurrent enclaves.
 
-We have added the following discussion to the Conclusion section to acknowledge this valuable perspective and guide future research:
+The performance challenge that \textit{does} relate to exceeding PMP capacity is \textbf{memory fragmentation within a single enclave}. When an enclave's physical memory becomes highly fragmented, the number of LPMP regions required to describe its memory layout can exceed what the limited PMP registers (typically 16 entries) can accommodate. This is where LPMP's virtualization capability becomes critical.
 
-\begin{changes}
-While our evaluation demonstrates COFFER's scalability through feature-based comparison (Table VI) and performance characterization with over 2,000 concurrent enclaves, a direct quantitative performance comparison against systems like Keystone across varying enclave counts would further illustrate the scalability breakthrough. Such a comparison would vividly demonstrate the transition from ``architecturally infeasible'' (when enclave counts exceed PMP limits) to ``feasible and efficient'' enabled by LPMP. However, this would require substantial porting efforts to adapt existing TEEs for PMP virtualization. We believe this represents a valuable direction for future community research, particularly as more RISC-V TEE implementations mature and standardized benchmarking frameworks emerge.
-\end{changes}
+To quantitatively demonstrate \work's performance under this challenging scenario, we conducted worst-case memory fragmentation experiments in Section~VII-B. Specifically, we forced the allocator to allocate physically non-adjacent pages for each enclave, ensuring maximum fragmentation where nearly every page requires a separate LPMP region. Under this worst-case condition:
 
-We believe this addition provides valuable guidance to the community on how direct performance comparisons would complement our current feature-based analysis and characterizes the technical challenges involved.
+\begin{itemize}
+\item For memory-intensive workloads (\texttt{stress-ng} vm workers), enclaves without any LPMP optimization could not complete execution in reasonable time (exceeding 1 hour vs. baseline of $<$10 seconds).
+\item With instruction/data split optimization alone, performance improved significantly, demonstrating the effectiveness of separating instruction and data memory regions.
+\item For compute-intensive workloads (RV8 benchmarks with large memory consumption such as \texttt{qsort}, \texttt{aes}, and \texttt{norx}), TLB-enhancement optimization provided greater benefits by leveraging TLB caching of PMP results.
+\item With both optimizations enabled, COFFER achieved $\le$3\% overhead even under worst-case memory fragmentation, demonstrating near-native performance.
+\end{itemize}
+
+We agree that a direct performance comparison showing aggregate throughput across increasing enclave counts would be valuable. However, such comparison faces a fundamental challenge: existing systems like Keystone are architecturally limited by PMP hardware constraints (typically 8-16 enclaves maximum). To conduct a fair comparison beyond this threshold would require either: (1) substantial architectural modifications to Keystone to incorporate LPMP-like virtualization (essentially reimplementing our core contribution), or (2) comparing against a hypothetical extended version that doesn't currently exist. As you astutely notes, this would involve ``significant porting and setup efforts that lie beyond the scope of a revision.''
+
+In response, we have added a discussion in the \S\ref{sec:eval-compare} of paper's Section~VII explaining that direct performance comparison at scale requires substantial architectural modifications to baseline systems, and how our feature-based comparison demonstrates the qualitative breakthrough enabled by LPMP.
 \end{revresponse}
 
 %% ---------------------- 2.2 ------------------------------
@@ -39,17 +46,11 @@ The design claims support for multi-core concurrent execution. To provide clarit
 \end{revcomment}
 
 \begin{revresponse}
-We thank the reviewer for this helpful suggestion. We have clarified the multi-core configuration used in our experiments.
+Thanks for this helpful suggestion. We have clarified the multi-core configuration used in our experiments.
 
-All performance evaluations in Section VII were conducted on the HiFive Unmatched board, which features four cores (SiFive U74 cores) and 16GB of DRAM. As stated in Section IV-A, COFFER enclaves support multi-threading and can concurrently execute on all system cores. For the concurrent enclave test in Figure 6a (number scalability), we launched up to 2,048 concurrent enclaves across all four cores of the HiFive Unmatched board.
+All performance evaluations in Section VII were conducted on the HiFive Unmatched board, which features four cores (SiFive U74 cores) and 16GB of DRAM. As stated in Section IV-A, \work enclaves support multi-threading and can concurrently execute on all system cores. For the concurrent enclave test in Figure 6a (number scalability), we launched up to 2,048 concurrent enclaves across all four cores of the HiFive Unmatched board. 
 
-We have added the following clarification to Section VII-A (Scalability):
-
-\begin{changes}
-We conduct all performance evaluations on the HiFive Unmatched board with four cores (SiFive U74) and 16GB DRAM. For the number scalability test (Figure 6a), we launch up to 2,048 concurrent enclaves distributed across all four cores, each running the \texttt{sha512} benchmark from the RV8 suite.
-\end{changes}
-
-This clarification helps readers understand that the demonstrated scalability applies to a realistic multi-core scenario where enclaves are distributed across available processor cores, which is typical in cloud confidential computing environments.
+In response, we have added the clarification \S\ref{sec:eval-scale} to paper's Section VII-A.
 \end{revresponse}
 
 %% ---------------------- 2.3 ------------------------------
@@ -61,52 +62,29 @@ The EModules design is a significant contribution. To precisely define the encla
 \end{revcomment}
 
 \begin{revresponse}
-We thank the reviewer for this important suggestion to clarify the EModules internal security model. This clarification will indeed help readers better understand the enclave TCB composition.
+Thank you for this important suggestion to clarify the EModules internal security model. This clarification will indeed help readers better understand the enclave TCB composition.
 
 To explicitly address the isolation relationship between different EModules: all EModules within a single enclave reside in the same protection domain. Specifically, all EModules execute in Supervisor Mode (S-Mode) and share the same enclave memory space, which is isolated from the host OS and other enclaves. The EApp runs in User Mode (U-Mode) within the same enclave, while the Security Monitor runs in Machine Mode (M-Mode).
 
-Importantly, while EModules within an enclave share the same S-Mode protection domain, EModules are not shared between different enclaves. As stated in Section VI-A: ``COFFER enclaves do not have shared resources, including EModules, physical memory, TLB entries, and page tables.'' Each enclave has its own private instances of EModules loaded according to its permission table, ensuring isolation between enclaves.
+Importantly, while EModules within an enclave share the same S-Mode protection domain, EModules are not shared between different enclaves. As stated in Section VI-A: ``\work enclaves do not have shared resources, including EModules, physical memory, TLB entries, and page tables.'' Each enclave has its own private instances of EModules loaded according to its permission table, ensuring isolation between enclaves.
 
 The rationale for this design is that EModules provide trusted OS services to the EApp within the enclave. Sharing the same protection domain enables efficient function calls between EModules and reduces context switch overhead, while the permission-based dynamic loading mechanism allows users to customize the TCB by including only necessary EModules.
 
-We have added the following clarification to Section VI (Security Analysis, TCB subsection):
-
-\begin{changes}
-All EModules within a single enclave execute in Supervisor Mode and reside in the same protection domain, sharing the enclave's memory space. This enables efficient inter-module function calls while maintaining isolation from the User Mode EApp. Critically, EModules are not shared between enclaves---each enclave loads its own private instances of EModules according to its permission table, ensuring that different enclaves remain fully isolated from each other.
-\end{changes}
-
-We have also added a clarification in Section IV-C (Design, Autonomous Adaptive Enclaves):
-
-\begin{changes}
-Within an enclave, all EModules execute in the same S-Mode privilege level and protection domain, enabling efficient service provision to the U-Mode EApp. The enclave's permission table controls which EModules can be loaded, allowing fine-grained TCB customization.
-\end{changes}
-
-We believe these additions precisely define the TCB boundary and clarify the isolation model, addressing the reviewer's concern.
+Just like reviewer 1's comment \ref{comment:tcb-1}, we have added the clarification \S\ref{sec:TCB} to Section VI.
 \end{revresponse}
 
 %% ---------------------- 2.4 ------------------------------
 
-\begin{revcomment}{Side-Channel Discussion Refinement}
+\begin{revcomment}{Side-Channel Discussion Refinement} \label{comment:tlb-sidechannel-refine}
 Regarding Refinement of the Side-Channel Discussion (Suggestion)
 
 The threat model appropriately excludes microarchitectural side-channel attacks requiring hardware modifications, and the paper insightfully notes that its design can mitigate TLB and page-table-based channels. To make the logic more rigorous, I suggest the authors briefly clarify the scope of side-channels discussed, explicitly stating that the channels excluded in §III and those discussed in §VI.A represent different subsets, with the latter being a "derivative advantage" of the architecture.
 \end{revcomment}
 
 \begin{revresponse}
-We thank the reviewer for this insightful observation. The reviewer is absolutely correct that the side-channels excluded in \S III and those discussed in \S VI.A represent different subsets, and we agree that clarifying this distinction will strengthen the logic of our security discussion.
-
-\textbf{Clarifying the Scope:} Section III broadly excludes all side-channel attacks from the threat model, as defending against microarchitectural side-channels generally requires hardware modifications orthogonal to our core contributions. However, Section VI.A makes a more nuanced distinction where COFFER's architectural design provides defense against certain side-channel subsets as a "derivative advantage."
-
-Specifically, while cache-based side-channels (e.g., Prime+Probe, Flush+Reload) remain out of scope and require hardware modifications, TLB-based and page-table-based side-channels are mitigated as a natural consequence of COFFER's design. As discussed in detail in our response to Reviewer 1, Comment 4, COFFER provides significant mitigation against TLB-based attacks through: (1) independent page table management per enclave, and (2) exclusive ownership of TLB with full flushes on context switches. However, we acknowledge these mechanisms provide mitigation rather than complete immunity.
-
-We have refined the side-channel discussion in Section VI.A (Security Analysis) to clarify the scope:
-
-\begin{changes}
-\textbf{Side-channel attacks.}
-While Section III excludes side-channel attacks from our threat model in general, we note that COFFER's architectural design provides defense against certain side-channel subsets as a derivative advantage. Previous works~\cite{a-sec-risc} have demonstrated various side-channel attacks on commodity RISC-V devices. Defending against cache-based side-channel attacks (e.g., Prime+Probe, Flush+Reload) requires hardware modification and remains orthogonal to our study. However, COFFER provides significant mitigation against TLB-based and page-table-based side-channel attacks as a natural consequence of its design: each enclave manages page tables independently, and the SM enforces the principle of exclusive ownership of TLB through full TLB flushes on domain switches. While these mechanisms do not provide theoretical immunity against all TLB-based attacks, they significantly raise the difficulty of mounting practical attacks.
-\end{changes}
-
-This refinement makes the logic more rigorous by explicitly distinguishing between the broad exclusion in the threat model and the specific mitigation capabilities that emerge from COFFER's design.
+Thank you for this insightful observation. We agree that clarifying this distinction will strengthen the logic of our security discussion. We have refined the side-channel discussion \S\ref{sec:tlb-side-channel} in paper's Section VI-A to clarify the scope.
 \end{revresponse}
 
-\printpartbibliography{a-sec-risc}
+\begin{concludingresponse}[]
+Thank you for your valuable comments and detailed questions on our manuscript. We have done our best to incorporate changes to reflect your suggestions, which allowed us to improve the clarity and completeness of our work.
+\end{concludingresponse}
