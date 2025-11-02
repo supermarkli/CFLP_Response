@@ -1,91 +1,20 @@
-% Reviewer 1
+% Reviewer 1（中文）
 \reviewer
-\begin{generalcomment}
-Thanks for submitting the work to TIFS. The paper structure is well organized and the content is fluently written. Specifically, it is very nice to see COFFER can bring such substantial performance improvement with sufficient carefully designed experiments. Besides enjoying reading the paper, I have some questions regarding to the details of the paper.
-\end{generalcomment}
-\begin{revresponse}[Thank you for your positive feedback and insightful questions.]
-We have carefully addressed all questions point by point as follows.
-\end{revresponse}
 
-%% -------------------------------1.1-----------------------------------------
-
-\begin{revcomment}{Memory Pool Management}
-First, in fig 3, you say the enclaves allocate memory from a reserved memory pool. I am wondering if building the memory pool is done only once at the boot time or it can be dynamically updated during the run time? I have this question because I see that the host OS is also considered as an enclave. Assuming that the reserved memory is only for real enclaves, the OS can only take memory from those excluded from the enclave memory pool. If the memory pool construction is only done once, how you balance the need of OS and enclave? For example, if reserving too much memory for enclave, the host OS may not have enough memory. Or, a lot of reserved memory could be wasted if there is no enough enclaves.
-\end{revcomment}
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=0.75\textwidth]{figures/asym-sym-view.pdf}
-	\caption*{\textbf{Figure 3: Comparison of asymmetric and symmetric approaches for
-	enclave isolation.}}
-	\label{fig:asym-sym-view}
-\end{figure}
-
-\begin{revresponse}
-Thank you for this excellent question about memory pool management. We clarify the design as follows:
-
-At boot time, the enclave memory pool is defined through kernel parameters (e.g., \texttt{movablecore=} in Linux), reserving a physical region for potential enclave use. Allocation from this pool is fully dynamic, with enclaves requesting only the memory they require via a certain interface \texttt{\_\_ecall\_ebi\_mem\_alloc} and returning it to the pool when destroyed. The \aclu{SM}'s \aclu{MM} tracks allocations through a memory ownership table and supports a flexible boundary between enclave and OS memory. This allows the OS to tap into unused pool memory when needed, and if the boundary region is occupied by enclaves, the manager can migrate enclave data to other pool areas. This design ensures reserved memory is never wasted and enables dynamic balancing of OS and enclave demands.
-
-In response, we have expanded \S\ref{sec:symmetric} to the paper's Section IV-B to provide a more comprehensive overview.
-\end{revresponse}
-
-
-%% -------------------------------1.2-----------------------------------------
-
-
-\begin{revcomment}{LPMP Replacement Policy (Exp WIP)}
-Second, I am a bit confused about the replacement policy used by LPMP. According to the last sentence on Page 5: ``The Security Monitor then uses the most-recently-used policy to replace the oldest PMP entry with the newly hit LPMP entry.'' What do you mean by oldest? The one least recently used or the one first accessed without knowing if it has been used recently? I currently did not see why they are related to MRU policy. Another question is that is it possible to use any other policy? Will they largely affect the performance? Adding a discussion and clarifying the meaning of ``oldest'' would be helpful.
+\begin{revcomment}{对论文核心结论的总结}
+论文研究多种机器学习算法在 TEE 内采用不同聚合方法（不同 TEE 方案、HE 与 MPC）所能获取的精度和时间问题。所得结论是：在保持基线精度的前提下，基于 TDX 的可信执行环境方案仅增加约 11\% 时延即可提供硬件级保护，综合表现优于 SGX、HE 与 MPC；HE 虽具有可形式化验证的安全性，但计算与通信开销分别提升至基线的数百倍，MPC 则在时间与通信开销间取得折中。
 \end{revcomment}
 \begin{revresponse}
-Thank you for catching this confusing terminology. We apologize for the unclear phrasing.
-
-\work uses an MRU list management policy for LPMP entries. When an LPMP entry is accessed (hit), it is moved to the head of the LPMP list. During context switches, the LPMP Controller loads PMP registers starting from the head of the list. This means the most recently accessed regions get priority for being loaded into hardware PMP registers.
-
-By ``oldest,'' we meant the PMP entry corresponding to the LPMP entry at the tail of the PMP registers---that is, the entry that was accessed \emph{least recently}. When all PMP entries in the PMP registers are occupied and a new LPMP entry is accessed, the entry at the tail of the PMP registers (least recently used) is effectively evicted from the hardware PMP registers to make room for the newly accessed entry.
-
-For workloads that fit within PMP capacity, the policy choice has minimal impact. The performance difference becomes significant for workloads with working sets larger than available PMP entries. Theoretically, MRU has the best balance of the performance and locality. To be more clear, we experimentally evaluated several policies during development. FIFO is simpler to implement but showed $\sim$x\% more LPMP faults in memory-intensive workloads. Random replacement is even simpler but increased LPMP faults by $\sim$x\%. We have added this experiments in Section III-B to clarify following \S\ref{sec:lpmp-replacement}
+感谢审稿专家对我们工作的精准提炼。我们完全同意您的总结，这也是我们工作的核心发现。
 \end{revresponse}
 
-
-%% ------------------------------1.3------------------------------------------
-
-
-\begin{revcomment}{EModule Trust Model and Security} \label{comment:tcb-1}
-Third, it seems that Emodules that are signed are considered as trusted? Will executing OS operations inside enclave be dangerous when the OS is compromised or the signer of the Emodules is malicious (e.g., supply-chain attack)?
+\begin{revcomment}{对实验结论符合预期的认可}
+该结论是符合预期的。在没有实验的情况下， m 虽然不能获得准确的数量对比关系，但仍然可推出各个方案所花费的时间大小关系。
 \end{revcomment}
 \begin{revresponse}
-Thank you for this important security consideration. Here are the rationales behind our trust model and the security mechanisms that protect Emodules.
-
-Yes, signed Emodules are trusted components of the TCB. This design choice follows the standard practice in TEE systems where certain platform-specific components must be trusted to provide meaningful functionality. Intel SGX trusts Intel-signed quoting enclaves and architectural enclaves, AMD SEV-SNP trusts AMD-signed firmware components, ARM TrustZone trusts vendor-signed trusted applications, and Keystone trusts the Security Monitor and runtime. For \work, Emodules enable rich OS functionality within enclaves while maintaining isolation from the untrusted host OS. The platform owner controls the signing key and determines which Emodules are authorized, establishing a clear chain of trust.
-
-Besides, The signing mechanism provides strong security guarantees. As described in Section IV-A, when the \texttt{Emod\_Manager} requests an Emodule from the host OS, it cryptographically verifies the digital signature contained in the Emodule image before loading. Only Emodules signed with the platform's private key can pass verification and execute. Even with a completely compromised OS attempting to provide malicious Emodules, the signature verification will fail, preventing unauthorized code from executing within enclaves. Furthermore, Emodules remain isolated in S-mode within enclave memory protected by PMP, preventing the OS from directly calling, manipulating, or injecting code into loaded Emodules.
-
-% \textbf{Minimizing the Trusted Computing Base:} We designed Emodules to be minimal and auditable. Our largest Emodule (EMod\_VFS) is only $\sim$5,500 LoC, and most are under 1,000 LoC, making comprehensive security reviews feasible. Enclaves use permission tables to specify which Emodules they require (Section III-C), meaning an enclave only loads necessary Emodules to minimize its TCB---for example, an enclave that doesn't need file I/O won't load EMod\_VFS. The Security Monitor's attestation mechanism (Section V) includes measurements of all loaded Emodules, allowing remote parties to verify exactly which Emodules are present in an enclave's TCB and make informed trust decisions.
-
-Nevertheless, if the signing key infrastructure is compromised and a malicious Emodule is signed, that Emodule could compromise enclaves that load it. However, this scenario represents a supply-chain attack on the TCB itself, which is outside our threat model. Such attacks would undermine the foundation of all TEE security guarantees, as no TEE system can provide protection if its root of trust is compromised. Platform owners can mitigate this risk by maintaining strict control over the signing key infrastructure and conducting thorough audits of Emodule code before signing.
-
-In response, we have added the clarification \S\ref{sec:TCB} to the paper's Section V.
-
-% \begin{changes}
-% Signed Emodules are trusted components of the enclave TCB, with the platform owner controlling the Emodule signing key and determining which Emodules are authorized. The EMod\_Manager cryptographically verifies each Emodule's signature before loading, ensuring that only Emodules signed with the platform's private key can execute. This trust model aligns with standard TEE practice where certain platform-specific components must be trusted. To minimize risk, Emodules are designed to be minimal (typically $<$1,000 LoC) and auditable, and enclaves only load the Emodules they require through permission tables. The attestation mechanism includes Emodule measurements, allowing remote parties to verify which Emodules are loaded and make informed trust decisions. Supply-chain attacks compromising the signing infrastructure are outside our threat model, as they would compromise the root of trust that all TEE security guarantees depend upon.
-% \end{changes}
-\end{revresponse}
-
-
-%% -------------------------------1.4--------------------------------------
-
-
-\begin{revcomment}{TLB-based Side Channel Attacks}
-Finally, why COFFER is resilient to TLB-based side channel attacks? Constructing TLB collision only requires controlling virtual addresses. Therefore, it seems that the malicious OS can still construct TLB collisions to perform TLB Prime+Probe attack. Can you clarify this? Adding a short discussion in the paper would be helpful.
-\end{revcomment}
-\begin{revresponse}
-Thank you for this important observation. The TLB Prime+Probe attack is a variation of the Prime+Probe side-channel method that uses the TLB instead of CPU caches to learn about another process’s memory accesses. It leverages shared microarchitectural state to leak information across security boundaries. However, this attack requires shared TLB entries between the attacker and victim, which \work's design aims to prevent.
-
-As described in \S IV-B, \work enforces security principles for TLB management. First, regarding exclusive ownership of TLB, at any moment all TLB entries belong to a single entity (either the host OS or a specific enclave), and upon every context switch into or out of an enclave, the LPMP Controller performs a complete TLB flush using \texttt{sfence.vma} to prevent the OS from directly observing enclave TLB entries or vice versa. Second, \work provides a freshness guarantee where the entire TLB is flushed when an enclave's memory mappings change (e.g., during memory allocation) to prevent stale entries from being exploited. Third, each enclave manages its own page tables independently (Section IV-A), with the OS and enclaves operating in different virtual address spaces, reducing opportunities for controlled TLB collisions.
-
-Just like reviewer 2's comment \ref{comment:tlb-sidechannel-refine}, we have clarified this as a derivative advantage \S\ref{sec:tlb-side-channel} in paper's Section VI-A.
+感谢审稿专家对我们工作的认可。我们在表4中提供了各个方案的平均训练时长，感谢您的建议。
 \end{revresponse}
 
 \begin{concludingresponse}[]
-Thank you for your valuable comments and detailed questions on our manuscript. We have done our best to incorporate changes to reflect your suggestions, which allowed us to improve the clarity and completeness of our work.
+感谢审稿专家的宝贵意见与建议，我们已据此完善正文相关章节与数据呈现。
 \end{concludingresponse}

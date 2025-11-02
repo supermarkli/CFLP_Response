@@ -64,18 +64,13 @@
 	\begin{titlepage}
 		\begin{center}
 			\vspace*{1cm}
-			\large{Responses to Reviewers' Comments for Manuscript \reviewresponse@manuscript}\\
-
+			\large{稿件 \reviewresponse@manuscript 审稿意见回复}\par
 			\vspace{1cm}
-			\textbf{\LARGE{\@title}}\\
+			\textbf{\LARGE{\@title}}\par
 			\vspace{1cm}
-			\large{Addressed Comments for Publication to}
-			
-			\Large{\reviewresponse@journal}
-			
-			\large{by}
-			
-			{\large{\@author}}
+			\large{《信息网络安全》}\par
+			\Large{\reviewresponse@journal}\par
+			{\large{李子豪\hspace{1em}张锋巍}}
 		\end{center}
 	\end{titlepage}
 }
@@ -83,24 +78,24 @@
 \newcommand{\editor}{
 	\clearpage
 	\@ifundefined{pdfbookmark}{}{%
-		\pdfbookmark[1]{Reponse to the Associate Editor}{hyperref@editor}%
+		\pdfbookmark[1]{致编辑的作者回复}{hyperref@editor}%
 	}%
-	\section*{\textbf{Response to the Associate Editor}}
-	\addcontentsline{toc}{section}{Response to the Associate Editor}
+	\section*{\textbf{致编辑的作者回复}}
+	\addcontentsline{toc}{section}{致编辑的作者回复}
 }
 
 \newcommand{\reviewer}[1][]{
 	\clearpage
 	\refstepcounter{reviewer@counter}%
 	\@ifundefined{pdfbookmark}{}{%
-		\pdfbookmark[1]{Reviewer \arabic{reviewer@counter}}{hyperref@reviewer\arabic{reviewer@counter}}%
+		\pdfbookmark[1]{审稿人 \arabic{reviewer@counter}}{hyperref@reviewer\arabic{reviewer@counter}}%
 	}%
 	\ifx&#1&%
-		\section*{\textbf{\bfseries{Response to Reviewer \arabic{reviewer@counter}}}}
-		\addcontentsline{toc}{section}{Response to Reviewer \arabic{reviewer@counter}}
+		\section*{\textbf{\bfseries{致审稿人 \arabic{reviewer@counter} 的作者回复}}}
+		\addcontentsline{toc}{section}{致审稿人 \arabic{reviewer@counter} 的作者回复}
 	\else
-		\section*{\textbf{\bfseries{Response to #1}}}
-		\addcontentsline{toc}{section}{Response to #1}
+		\section*{\textbf{\bfseries{致 #1 的作者回复}}}
+		\addcontentsline{toc}{section}{致 #1 的作者回复}
 	\fi
 }
 %%%
@@ -108,39 +103,39 @@
 %%% Blocks %%%
 \newenvironment{generalcomment}{%
 % \refstepcounter{reviewcomment@counter}
-	\begin{tcolorbox}[adjusted title={Summary Comment}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,boxrule=0em,opacityframe=0,colback={colorcommentbg}]
+	\begin{tcolorbox}[adjusted title={总评}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,boxrule=0em,opacityframe=0,colback={colorcommentbg}]
 }{\end{tcolorbox}}
 
 \newenvironment{revcomment}[2][]{%
 	\refstepcounter{reviewcomment@counter}%
 	\ifx&#2&%
-		\begin{tcolorbox}[adjusted title={Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]%
-		\addcontentsline{toc}{subsection}{Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}%
+		\begin{tcolorbox}[adjusted title={意见 \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]%
+		\addcontentsline{toc}{subsection}{意见 \arabic{reviewer@counter}.\arabic{reviewcomment@counter}}%
 	\else%
-		\begin{tcolorbox}[adjusted title={Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}: #2}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]%
-		\addcontentsline{toc}{subsection}{Comment \arabic{reviewer@counter}.\arabic{reviewcomment@counter}: #2}%
+		\begin{tcolorbox}[adjusted title={意见 \arabic{reviewer@counter}.\arabic{reviewcomment@counter}: #2}, fonttitle={\bfseries}, enhanced jigsaw, colbacktitle={colorcommentframe},arc=0pt,opacityframe=0,boxrule=0em,colback={colorcommentbg},#1]%
+		\addcontentsline{toc}{subsection}{意见 \arabic{reviewer@counter}.\arabic{reviewcomment@counter}: #2}%
 	\fi%
 }{\end{tcolorbox}}
 
 \newenvironment{revresponse}[1][{}]{%
-	\noindent\textbf{Response \arabic{reviewer@counter}.\arabic{reviewcomment@counter}:} #1\par
+	\noindent\textbf{回复 \arabic{reviewer@counter}.\arabic{reviewcomment@counter}:} #1\par
 }{\vspace{1em}}
 
 \newenvironment{revmeta}[1][{}]{%
-	\textbf{Response Summary:} #1\par
+	\textbf{回复摘要：} #1\par
 }{\vspace{1em}}
 
 \newenvironment{concludingresponse}[1][]{%
-	\begin{tcolorbox}[attach title to upper, breakable, title={Concluding Response #1}, after title={.\enskip}, fonttitle={\bfseries}, coltitle={colorcommentfg}, colback={colorcommentbg}, colframe={colorcommentframe},arc=0pt]
+	\begin{tcolorbox}[attach title to upper, breakable, title={结语 #1}, after title={.\enskip}, fonttitle={\bfseries}, coltitle={colorcommentfg}, colback={colorcommentbg}, colframe={colorcommentframe},arc=0pt]
 	}{\end{tcolorbox}}
 
 \newenvironment{changes}{
-\begin{tcolorbox}[use color stack, breakable,left skip=0em,enhanced jigsaw, colframe={colorchangebg}, before upper={\parindent 12pt},boxrule=0.0em, leftrule=.5em, opacityback=0, opacityframe=1, arc=1pt]\color{colorchangetext}
+\begin{tcolorbox}[breakable,left skip=0em,enhanced jigsaw, colframe={colorchangebg}, before upper={\parindent 12pt},boxrule=0.0em, leftrule=.5em, opacityback=0, opacityframe=1, arc=1pt]\color{colorchangetext}
 }
 {\end{tcolorbox}}
 
 \newenvironment{previous}{
-\begin{tcolorbox}[use color stack, breakable,left skip=0em,enhanced jigsaw, colframe={colorprvbg}, before upper={\parindent 12pt},boxrule=0.0em, leftrule=0.5em, opacityback=0, opacityframe=1, arc=1pt]\color{colorprvtext}
+\begin{tcolorbox}[breakable,left skip=0em,enhanced jigsaw, colframe={colorprvbg}, before upper={\parindent 12pt},boxrule=0.0em, leftrule=0.5em, opacityback=0, opacityframe=1, arc=1pt]\color{colorprvtext}
 }
 {\end{tcolorbox}}
 
